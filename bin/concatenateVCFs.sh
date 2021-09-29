@@ -92,8 +92,8 @@ else
         bgzip -@${cpus} rawcalls.vcf
 fi
 
-bcftools sort -o rawcalls.sorted.vcf.gz rawcalls.vcf.gz
-tabix rawcalls.sorted.vcf.gz
+bcftools sort rawcalls.vcf.gz | bgzip > rawcalls.sorted.vcf.gz
+tabix -p vcf rawcalls.sorted.vcf.gz
 
 set +u
 
