@@ -85,24 +85,24 @@ then
 	      tail -n +$((L+1)) ${vcf}
 	    done
 	  done
-	) | bgzip -@${cpus} > rawcalls.vcf.gz
+	) | bgzip -@${cpus} > rawcalls.unsorted.vcf.gz
 else
         VCF=$(ls no_intervals*.vcf)
-        cp $VCF rawcalls.vcf 
-        bgzip -@${cpus} rawcalls.vcf
+        cp $VCF rawcalls.unsorted.vcf
+        bgzip -@${cpus} rawcalls.unsorted.vcf
 fi
 
-bcftools sort rawcalls.vcf.gz | bgzip > rawcalls.sorted.vcf.gz
-tabix -p vcf rawcalls.sorted.vcf.gz
+bcftools sort rawcalls.unsorted.vcf.gz | bgzip > rawcalls.vcf.gz
+tabix -p vcf rawcalls.vcf.gz
 
 set +u
 
 # Now we have the concatenated VCF file, check for WES/panel targets, and generate a subset if there is a BED provided
 if [ ! -z ${targetBED+x} ]; then
 	echo "Target is $targetBED - Selecting subset..."
-	bcftools isec --targets-file ${targetBED} rawcalls.sorted.vcf.gz | bgzip -@${cpus} > ${outputFile}.gz
+	bcftools isec --targets-file ${targetBED} rawcalls.vcf.gz | bgzip -@${cpus} > ${outputFile}.gz
 	tabix ${outputFile}.gz
 else
 	# Rename the raw calls as WGS results
-	for f in rawcalls*; do mv -v $f ${outputFile}${f#rawcalls.sorted.vcf}; done
+	for f in rawcalls*; do mv -v $f ${outputFile}${f#rawcalls.vcf}; done
 fi
